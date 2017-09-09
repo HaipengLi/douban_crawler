@@ -10,7 +10,7 @@ from myLog import *
 # todo use another ip pool when none of them is available
 def getAllPhotoInAlbum(albumLink,title):
   photoList=[]
-  albumID=int(link.split('/')[-2])
+  albumID=int(albumLink.split('/')[-2])
   i=0
   while True:
     printWithTime('get photo link at page '+str(i)+ '...')
