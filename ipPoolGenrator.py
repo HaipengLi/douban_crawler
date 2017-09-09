@@ -37,6 +37,35 @@ def generate(rawIPZip):
         if isValidProxy(ip,port):
             IPPool.append((ip,port))
     return IPPool
+def isExpired():
+  try:
+    iprecord = ipRecord.objects.get(pin=0)
+  except:
+    return True
+  else:
+    if MAX_TIME_LENGTH<int(time.time())-iprecord.updateTime:
+      return True
+    else:
+      return False
+def regenerate():
+  try:
+    iprecord = ipRecord.objects.get(pin=0)
+  except:
+    # create one
+    printWithTime("creating ip pool...")
+    iprecord = ipRecord(pin=0, ipAndPort=generate(crawlIP(1)), updateTime=int(time.time()))
+    iprecord.save()
+  else:
+    if MAX_TIME_LENGTH < int(time.time()) - iprecord.updateTime:
+      # update
+      printWithTime("updating ip pool...(last time {} second(s) ago)".format(int(time.time()) - iprecord.updateTime))
+      iprecord.ipAndPort = generate(crawlIP(1))
+      iprecord.updateTime = int(time.time())
+      iprecord.save()
+    else:
+      # keep
+      pass
+  return iprecord.ipAndPort
 connect('ip_pool')
 headers = {
   "Host": "www.xicidaili.com",

@@ -2,48 +2,65 @@ import os,sys,time
 from lxml import html
 from mongoengine import *
 from test_db import albumRecord,userRecord
-from Download import down
 from myLog import *
+from Download import down
 
-# todo save albumList & photoList in DB
 # todo save IP in DB  bug: use wrong db to store ip pool !
-# todo use another ip pool when none of them is available
-def getAllPhotoInAlbum(albumLink,title):
-  photoList=[]
+# todo add tools to convert .webp to .jpg
+def getAllPhotoInAlbum(albumLink,title,total):
+  photoIDList=[]
   albumID=int(albumLink.split('/')[-2])
   i=0
-  while True:
-    printWithTime('get photo link at page '+str(i)+ '...')
-    page=down.get(albumLink)
-    time.sleep(1)
-    tree=html.fromstring(page.text)
-    photoList+=tree.xpath('//a[@class="photolst_photo"]/@href')
-    try:
-      albumLink=tree.xpath('//link[@rel="next"]/@href')[0]
-      i+=1
-    except IndexError:
-      break
-  for i,photo in enumerate(photoList):
-    picID=photo.split('/')[-2]
-    #pic filter
-    try:
-      albumRecord.objects.get(albumID=albumID, picID=picID)
-    except DoesNotExist:
-      #crawl
-      # and record
-      temp = albumRecord(albumID=albumID, picID=picID)
-      user.album.append(temp)
-      temp.save()
-    else:
-      # visited
-      continue
-    photoURL='https://img3.doubanio.com/view/photo/l/public/p'+picID+'.webp'
+  printWithTime('{} begin...'.format(title))
+  # if all in db (including status==False)
+  if total == albumRecord.objects(albumID=albumID).count():
+    pass # jump collecting
+  else:
+    # else continue collecting (add those not in db)
+    while True:
+      printWithTime('get photo link at page ' + str(i) + '...')
+      page = down.get(albumLink)
+      time.sleep(1)
+      tree = html.fromstring(page.text)
+      photoListInOnePage=tree.xpath('//a[@class="photolst_photo"]/@href')
+      for photo in photoListInOnePage:
+        picID = photo.split('/')[-2]
+        try:
+          albumRecord.objects.get(albumID=albumID, picID=picID)
+        except: # if not in db, add
+          temp = albumRecord(albumID=albumID, picID=picID, status=False)
+          temp.save()
+        else: # already in db, jump
+          continue
+      try:
+        albumLink = tree.xpath('//link[@rel="next"]/@href')[0]
+        i += 1
+      except IndexError:
+        break
+  for queryResult in albumRecord.objects(albumID=albumID, status=False):
+    photoIDList.append(queryResult['picID'])
+  # todo display percentage
+  for i,picID in enumerate(photoIDList):
+    # #pic filter
+    # try:
+    #   albumRecord.objects.get(albumID=albumID, picID=picID)
+    # except DoesNotExist:
+    #   #crawl
+    #   # and record
+    #   temp = albumRecord(albumID=albumID, picID=picID)
+    #   # todo append album to user (error in python3.5, non local variable)
+    #   # user.album.append(temp)
+    #   temp.save()
+    # else:
+    #   # visited
+    #   continue
+    photoURL='https://img3.doubanio.com/view/photo/l/public/p{}.webp'.format(picID)
     try:
       os.mkdir(title)
     except FileExistsError:
       pass
-    with open(title+'/'+str(i)+'.webp','wb') as f:
-      printWithTime('get '+photoURL+' of album "'+title+'"...')
+    with open(title+'/'+str(picID)+'.webp','wb') as f:
+      printWithTime('get '+photoURL+' of album "'+title+'"...',end='')
       f.write(down.get(photoURL).content)
       printWithTime('success\nwaiting...')
       time.sleep(1)
@@ -97,27 +114,28 @@ def main():
     time.sleep(1)
     photo_tree=html.fromstring(photo_page.text)
     albumList=photo_tree.xpath('//div[@class="wr"]/div[@class="albumlst"]')
+
     for album in albumList:
       link=album.xpath('.//div[@class="pl2"]/a/@href')[0]
-      #album filter
-      total=int(album.xpath('.//span[@class="pl"]/text()')[0].split('张')[0].strip()) # get the total number of pictures of an album
-      albumID=int(link.split('/')[-2])
       title = album.xpath('.//div[@class="pl2"]/a/text()')[0]
-      if total == albumRecord.objects(albumID=albumID).count():
+      #album filter
+      total = int(album.xpath('.//span[@class="pl"]/text()')[0].split('张')[0].strip())  # get the total number of pictures of an album
+      albumID = int(link.split('/')[-2])
+      if total == albumRecord.objects(albumID=albumID,status=True).count():
         printWithTime("jump album {}".format(title))
         continue  # next album
       else:
         # not finished album
         pass
-      albumDict[title]=link
+      albumDict[title]=[link,total]
     try:
       i+=1
       photo_link=photo_tree.xpath('//link[@rel="next"]/@href')[0]
     except IndexError: # the end of album page
       break
 
-  for title,link in dict.items(albumDict):
-    getAllPhotoInAlbum(link,title)
+  for title,linkAndTotal in dict.items(albumDict):
+    getAllPhotoInAlbum(linkAndTotal[0],title,linkAndTotal[1])
 
   os.chdir('../../..')
 # test

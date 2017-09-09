@@ -3,6 +3,7 @@ connect('douban_album')
 class albumRecord(Document):
   albumID=IntField(required=True)
   picID=IntField(required=True,unique=True) # todo: use int or string?
+  status=BooleanField(required=True,default=False)
 class userRecord(Document):
   username=StringField(required=True,max_length=30,unique=True)
   album=ListField(ReferenceField(albumRecord))

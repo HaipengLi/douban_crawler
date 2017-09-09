@@ -2,7 +2,7 @@ import requests
 import re
 import random
 import time
-from ipPoolGenrator import IPPool
+from ipPoolGenrator import IPPool,isExpired, regenerate
 from myLog import *
 
 # 创建一个反反爬的类
@@ -33,6 +33,8 @@ class Download:
   def get(self, url, timeout=3, proxy=None, num_retries=6):  ##给函数一个默认参数proxy为空,默认num_retries为6次
     UA = random.choice(self.user_agent_list)  ##从user_agent_list中随机取出一个字符串。
     headers = {'User_Agent': UA}  ##构造一个完整的User_Agent
+    if isExpired:
+      self.ipList=regenerate()
     if proxy == None:  ##当代理为空时，不使用代理获取response
       try:
         return requests.get(url, headers=headers)  ##返回一个requests.get的页面文件，调用随机的headers，服务器以为我们是真的浏览器了
