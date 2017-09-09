@@ -1,14 +1,21 @@
-import requests  #这里使用requests，小脚本用它最合适！
-from lxml import html    #这里我们用lxml，也就是xpath的方法
+import requests
+from lxml import html
 from http import cookiejar
 import os
 import time
+from mongoengine import *
+from test_db import albumRecord,userRecord
+from Download import down
+connect('douban_album')
+# todo save albumList & photoList in DB
+# todo save IP in DB
 def getAllPhotoInAlbum(albumLink,title):
   photoList=[]
+  albumID=int(link.split('/')[-2])
   i=0
   while True:
     print('get photo link at page '+str(i)+ '...')
-    page=session.get(albumLink, headers=headers)
+    page=down.get(albumLink)
     time.sleep(1)
     tree=html.fromstring(page.text)
     photoList+=tree.xpath('//a[@class="photolst_photo"]/@href')
@@ -18,21 +25,33 @@ def getAllPhotoInAlbum(albumLink,title):
     except IndexError:
       break
   for i,photo in enumerate(photoList):
-    photoCode=photo.split('/')[-2]
-    photoURL='https://img3.doubanio.com/view/photo/l/public/p'+photoCode+'.webp'
+    picID=photo.split('/')[-2]
+    #pic filter
+    try:
+      albumRecord.objects.get(albumID=albumID, picID=picID)
+    except DoesNotExist:
+      #crawl
+      # and record
+      temp = albumRecord(albumID=albumID, picID=picID)
+      user.album.append(temp)
+      temp.save()
+    else:
+      # visited
+      continue
+    photoURL='https://img3.doubanio.com/view/photo/l/public/p'+picID+'.webp'
     try:
       os.mkdir(title)
     except FileExistsError:
       pass
     with open(title+'/'+str(i)+'.webp','wb') as f:
       print('get '+photoURL+' of album "'+title+'"...')
-      f.write(requests.get(photoURL).content)
+      f.write(down.get(photoURL).content)
       print('success\nwaiting...')
       time.sleep(1)
   print('done with album: '+title)
 
 headers = {
-  "Host": "www.douban.com",
+  #"Host": "www.douban.com",
   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
 }
 session = requests.session()
@@ -43,9 +62,9 @@ try:
 
 except:
   print("还没有cookie信息")
-
-link='https://www.douban.com/people/Forskolin/'
-main_page = session.get(link, headers=headers)
+username='Forskolin'
+link='https://www.douban.com/people/'+username
+main_page = down.get(link)
 #对获取到的page格式化操作，方便后面用XPath来解析
 main_tree = html.fromstring(main_page.text)
 #XPath解析，获得你要的文字段落！
@@ -70,16 +89,35 @@ except FileExistsError:
   pass
 os.chdir('albums')
 
+# db
+try:
+  user=userRecord.objects.get(username=username)
+except DoesNotExist:
+  # not found -> create one
+  user = userRecord(username=username)
+  user.save()
+
 albumDict={}
 i=0
 while True:
   print('get album link at page '+str(i)+'...')
-  photo_page = session.get(photo_link, headers=headers)
+  photo_page = down.get(photo_link)
   time.sleep(1)
   photo_tree=html.fromstring(photo_page.text)
   albumList=photo_tree.xpath('//div[@class="wr"]/div[@class="albumlst"]')
   for album in albumList:
-    albumDict[album.xpath('.//div[@class="pl2"]/a/text()')[0]]=album.xpath('.//div[@class="pl2"]/a/@href')[0]
+    link=album.xpath('.//div[@class="pl2"]/a/@href')[0]
+    #album filter
+    total=int(album.xpath('.//span[@class="pl"]/text()')[0].split('张')[0].strip()) # get the total number of pictures of an album
+    albumID=int(link.split('/')[-2])
+    title = album.xpath('.//div[@class="pl2"]/a/text()')[0]
+    if total == albumRecord.objects(albumID=albumID).count():
+      print("jump album {}".format(title))
+      continue  # next album
+    else:
+      # not finished album
+      pass
+    albumDict[title]=link
   try:
     i+=1
     photo_link=photo_tree.xpath('//link[@rel="next"]/@href')[0]
