@@ -1,8 +1,8 @@
 import os,sys,time
 from lxml import html
 from mongoengine import *
-from test_db import albumRecord,userRecord
-from myLog import *
+from DBDefine import albumRecord,userRecord
+from MyLog import *
 from Download import down
 
 # todo save IP in DB  bug: use wrong db to store ip pool !

@@ -4,7 +4,7 @@ crawler free proxy ip from http://www.xicidaili.com and test validity
 import telnetlib, requests, time
 from lxml import html
 from mongoengine import *
-from myLog import *
+from MyLog import *
 MAX_TIME_LENGTH=3600 # the max length of time that we have to update ip pool
 class ipRecord(Document):
   pin=IntField(required=True,unique=True)

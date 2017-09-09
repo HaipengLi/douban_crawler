@@ -1,4 +1,5 @@
 from mongoengine import *
+
 connect('douban_album')
 class albumRecord(Document):
   albumID=IntField(required=True)

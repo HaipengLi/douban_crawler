@@ -2,8 +2,8 @@ import requests
 import re
 import random
 import time
-from ipPoolGenrator import IPPool,isExpired, regenerate
-from myLog import *
+from IPPoolGenrator import IPPool,isExpired, regenerate
+from MyLog import *
 
 # 创建一个反反爬的类
 class Download:
