@@ -1,6 +1,4 @@
-import requests
 from lxml import html
-from http import cookiejar
 import os
 import time
 from mongoengine import *
@@ -8,7 +6,8 @@ from test_db import albumRecord,userRecord
 from Download import down
 connect('douban_album')
 # todo save albumList & photoList in DB
-# todo save IP in DB
+# todo save IP in DB  bug: use wrong db to store ip pool !
+# todo use another ip pool when none of them is available
 def getAllPhotoInAlbum(albumLink,title):
   photoList=[]
   albumID=int(link.split('/')[-2])
@@ -50,18 +49,6 @@ def getAllPhotoInAlbum(albumLink,title):
       time.sleep(1)
   print('done with album: '+title)
 
-headers = {
-  #"Host": "www.douban.com",
-  'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
-}
-session = requests.session()
-session.cookies = cookiejar.LWPCookieJar(filename='cookies.txt')
-try:
-  print(session.cookies)
-  session.cookies.load(ignore_discard=True)
-
-except:
-  print("还没有cookie信息")
 username='Forskolin'
 link='https://www.douban.com/people/'+username
 main_page = down.get(link)
