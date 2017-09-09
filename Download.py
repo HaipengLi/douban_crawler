@@ -3,6 +3,7 @@ import re
 import random
 import time
 from ipPoolGenrator import IPPool
+from myLog import *
 
 # 创建一个反反爬的类
 class Download:
@@ -38,10 +39,10 @@ class Download:
       except:  ##如果上面的代码执行报错则执行下面的代码
         if num_retries > 0:  ##num_retries是限定的重试次数
           time.sleep(10)  ##延迟10秒
-          print(u'获取网页出错，10s后将获取倒数第：', num_retries, u'次')
+          printWithTime(u'获取网页出错，10s后将获取倒数第：', num_retries, u'次')
           return self.get(url, timeout, num_retries - 1)  ##调用自身，并减1，实现循环6次
         else:
-          print(u'开始使用代理')
+          printWithTime(u'开始使用代理')
           time.sleep(10)
           IP = 'http://{}'.format(':'.join(random.choice(self.ipList)))  ##将从self.iplist中随机获取的字符串处理成需要的格式。去除两边空格后，用join拼接？
           proxy = {'http': IP}
@@ -57,11 +58,11 @@ class Download:
           time.sleep(10)
           IP = ''.join(str(random.choice(self.ipList)).strip())
           proxy = {'http': IP}
-          print(u'正在更换代理，10s后将重新获取倒数第', num_retries, u'次')
-          print(u'当前代理是：', proxy)
+          printWithTime(u'正在更换代理，10s后将重新获取倒数第', num_retries, u'次')
+          printWithTime(u'当前代理是：', proxy)
           return self.get(url, timeout, proxy, num_retries - 1)
         else:
-          print(u'代理也不好使！取消代理')
+          printWithTime(u'代理也不好使！取消代理')
           return self.get(url, 3)
 
 
