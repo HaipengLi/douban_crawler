@@ -4,7 +4,7 @@ from mongoengine import *
 from DBDefine import albumRecord,userRecord
 from MyLog import *
 from Download import down
-
+# todo
 # todo save IP in DB  bug: use wrong db to store ip pool !
 # todo add tools to convert .webp to .jpg
 def getAllPhotoInAlbum(albumLink,title,total):
@@ -34,6 +34,8 @@ def getAllPhotoInAlbum(albumLink,title,total):
           continue
       try:
         albumLink = tree.xpath('//link[@rel="next"]/@href')[0]
+        if albumLink[-3:]=='sep': # in order to distinguish the 'next page' of album from the 'next page' of reviews
+          break
         i += 1
       except IndexError:
         break
