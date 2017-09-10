@@ -5,6 +5,7 @@ import telnetlib, requests, time
 from lxml import html
 from mongoengine import *
 from MyLog import *
+from tqdm import tqdm
 MAX_TIME_LENGTH=3600 # the max length of time that we have to update ip pool
 class ipRecord(Document):
   pin=IntField(required=True,unique=True)
@@ -30,10 +31,10 @@ def crawlIP(pages=2):
         tree=html.fromstring(res.text)
         ips += tree.xpath('//tr/td[position()=2]/text()') # or td[2]
         ports += tree.xpath('//tr/td[position()=3]/text()')
-    return zip(ips,ports)
+    return zip(tqdm(ips),ports)
 def generate(rawIPZip):
     IPPool=[]
-    for ip,port in rawIPZip:
+    for ip,port in (rawIPZip):
         if isValidProxy(ip,port):
             IPPool.append((ip,port))
     return IPPool

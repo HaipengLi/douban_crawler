@@ -30,7 +30,7 @@ def test():
   try:
     albumRecord.objects.get(albumID=albumID,picID=picID)
   except DoesNotExist:
-    # todo: crawl
+    #  crawl
     # and record
     temp=albumRecord(albumID=albumID,picID=picID)
     user.album.append(temp)

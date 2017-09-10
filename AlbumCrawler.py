@@ -1,10 +1,11 @@
+from tqdm import tqdm
 import os,sys,time
 from lxml import html
 from mongoengine import *
 from DBDefine import albumRecord,userRecord
 from MyLog import *
 from Download import down
-# todo
+# todo jump certain album
 # todo save IP in DB  bug: use wrong db to store ip pool !
 # todo add tools to convert .webp to .jpg
 def getAllPhotoInAlbum(albumLink,title,total):
@@ -42,7 +43,7 @@ def getAllPhotoInAlbum(albumLink,title,total):
   for queryResult in albumRecord.objects(albumID=albumID, status=False):
     photoIDList.append(queryResult['picID'])
   # todo display percentage
-  for i,picID in enumerate(photoIDList):
+  for i,picID in enumerate(tqdm(photoIDList)):
     # #pic filter
     # try:
     #   albumRecord.objects.get(albumID=albumID, picID=picID)
