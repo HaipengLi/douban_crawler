@@ -6,6 +6,7 @@ from DBDefine import albumRecord,userRecord
 from MyLog import *
 from Download import down
 # todo jump certain album
+# todo: fail to recognise visited album
 # todo save IP in DB  bug: use wrong db to store ip pool !
 # todo add tools to convert .webp to .jpg
 def getAllPhotoInAlbum(albumLink,title,total):
@@ -67,6 +68,8 @@ def getAllPhotoInAlbum(albumLink,title,total):
       f.write(down.get(photoURL).content)
       printWithTime('success\nwaiting...')
       time.sleep(1)
+    # update status to True
+    albumRecord.objects(albumID=albumID, picID=picID).update_one(status=True)
   printWithTime('done with album: '+title)
 def main():
   if (len(sys.argv) > 1):
@@ -139,7 +142,7 @@ def main():
 
   for title,linkAndTotal in dict.items(albumDict):
     getAllPhotoInAlbum(linkAndTotal[0],title,linkAndTotal[1])
-
+  printWithTime("Mission Complete!")
   os.chdir('../../..')
 # test
 if __name__=='__main__':

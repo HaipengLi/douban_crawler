@@ -67,6 +67,7 @@ def regenerate():
       # keep
       pass
   return iprecord.ipAndPort
+
 connect('ip_pool')
 headers = {
   "Host": "www.xicidaili.com",
