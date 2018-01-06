@@ -2,6 +2,8 @@ from tqdm import tqdm
 import os,sys,time
 from lxml import html
 from mongoengine import *
+from PIL import Image
+
 from DBDefine import albumRecord,userRecord
 from MyLog import *
 from Download import down
@@ -63,11 +65,15 @@ def getAllPhotoInAlbum(albumLink,title,total):
       os.mkdir(title)
     except FileExistsError:
       pass
-    with open(title+'/'+str(picID)+'.webp','wb') as f:
+    filename = title+'/'+str(picID)+'.webp'
+    with open(filename,'wb') as f:
       printWithTime('get '+photoURL+' of album "'+title+'"...',end='')
       f.write(down.get(photoURL).content)
-      printWithTime('success\nwaiting...')
-      time.sleep(1)
+    temp_img = Image.open(filename).convert("RGB")
+    temp_img.save(title+'/'+str(picID)+'.jpg')
+    os.remove(filename)
+    printWithTime('success\nwaiting...')
+    time.sleep(1)
     # update status to True
     albumRecord.objects(albumID=albumID, picID=picID).update_one(status=True)
   printWithTime('done with album: '+title)
@@ -79,13 +85,12 @@ def main():
   printWithTime('connecting database...')
   connect('douban_album')
   link='https://www.douban.com/people/'+username
+  # http get
   main_page = down.get(link)
-  #对获取到的page格式化操作，方便后面用XPath来解析
+  # parse
   main_tree = html.fromstring(main_page.text)
-  #XPath解析，获得你要的文字段落！
   name = main_tree.xpath('//div[@class="user-info"]/div[@class="pl"]/text()')[0].strip()
   intro = main_tree.xpath('//span[@id="intro_display"]/text()')
-
   photo_link=link.rstrip('/')+'/photos'
 
   try:
