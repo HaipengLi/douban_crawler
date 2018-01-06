@@ -67,12 +67,11 @@ def getAllPhotoInAlbum(albumLink,title,total):
       pass
     filename = title+'/'+str(picID)+'.webp'
     with open(filename,'wb') as f:
-      printWithTime('get '+photoURL+' of album "'+title+'"...',end='')
+      print('Download '+photoURL.split('/')[-1]+' of album "'+title)
       f.write(down.get(photoURL).content)
     temp_img = Image.open(filename).convert("RGB")
     temp_img.save(title+'/'+str(picID)+'.jpg')
     os.remove(filename)
-    printWithTime('success\nwaiting...')
     time.sleep(1)
     # update status to True
     albumRecord.objects(albumID=albumID, picID=picID).update_one(status=True)

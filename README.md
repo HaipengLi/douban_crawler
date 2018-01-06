@@ -1,5 +1,5 @@
 # douban_crawler
-input the id of a user, crawl all his/her photos in albums
+input the id of a user, crawl all one's photos in albums
 ## dependencies
 pipenv is used to control the dependencies.
 
@@ -17,5 +17,11 @@ pipenv shell
 ```
 ## usage
 ```
-python AlbumCrawler [user_id]
+python AlbumCrawler [user id]
 ```
+for example
+```
+python AlbumCrawler captainou
+```
+> The user id can be found in one's main page url.
+e.g. `https://www.douban.com/people/captainou/` indicates user id is `captainou`.
